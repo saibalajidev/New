@@ -587,6 +587,261 @@ class AppointmentScheduler:
 
 
 
+from flask import Flask, request, jsonify
+import datetime
+import json
+
+app = Flask(__name__)
+
+# Initial application state. This is re-initialized for every new request
+# to the serverless function.
+initial_state = {
+    "appointments": {},
+    "vets": ["Dr. Smith", "Dr. Jones"],
+    "services": ["vet visit", "grooming", "vaccination"],
+    "hospitals": {
+        "City Animal Hospital": {"checkup": 50, "vaccination": 30, "surgery": 500},
+        "Pet Care Clinic": {"checkup": 65, "vaccination": 40, "surgery": 650},
+        "Affordable Vet Center": {"checkup": 40, "vaccination": 25, "surgery": 450}
+    },
+    "diet_rules": {
+        "dog": {
+            "adult": "Feed a balanced adult dog food. Measure portions.",
+            "puppy": "Use a high-protein puppy formula. Consult your vet."
+        },
+        "cat": {
+            "adult": "Use a high-quality wet food. Ensure fresh water is always available.",
+            "senior": "Consider a low-calorie diet to prevent weight gain."
+        },
+        "health_issues": {
+            "weight": "Also, consider a low-fat diet and increase exercise.",
+            "kidney": "A low-phosphorus diet is recommended. Your vet can provide a therapeutic food."
+        }
+    },
+    "feedback_list": []
+}
+
+@app.route('/api', methods=['POST'])
+def handle_request():
+    """
+    Handles all requests by receiving the current state, an action, and data.
+    It returns the updated state and a response message.
+    """
+    try:
+        req_data = request.json
+        current_state = req_data.get('state', initial_state.copy())
+        action = req_data.get('action')
+        data = req_data.get('data', {})
+    except json.JSONDecodeError:
+        return jsonify({"message": "Invalid JSON format."}), 400
+
+    message = "I can help with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+    # --- Appointment Scheduler Logic ---
+    if action == "book_appointment":
+        service_type = data.get('service_type')
+        vet_name = data.get('vet_name')
+        pet_name = data.get('pet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+        reason = data.get('reason')
+
+        if service_type.lower() not in current_state["services"]:
+            message = "Error: Service type not found. Available services are: vet visit, grooming, vaccination."
+        elif vet_name not in current_state["vets"]:
+            message = "Error: Vet not found."
+        elif (vet_name, date, time_slot) in current_state["appointments"]:
+            message = "Error: Time slot already booked."
+        else:
+            current_state["appointments"][(vet_name, date, time_slot)] = {
+                "service_type": service_type,
+                "pet_name": pet_name,
+                "reason": reason
+            }
+            message = f"Success: {service_type} appointment booked for {pet_name} with {vet_name} on {date} at {time_slot}."
+
+    elif action == "cancel_appointment":
+        vet_name = data.get('vet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+
+        if (vet_name, date, time_slot) in current_state["appointments"]:
+            del current_state["appointments"][(vet_name, date, time_slot)]
+            message = "Success: Appointment canceled."
+        else:
+            message = "Error: Appointment not found."
+
+    # --- Budget Tracker Logic ---
+    elif action == "find_hospitals_by_budget":
+        budget = data.get('budget')
+        service_needed = data.get('service_needed')
+        affordable_hospitals = []
+        for hospital, prices in current_state["hospitals"].items():
+            if service_needed in prices and prices[service_needed] <= budget:
+                affordable_hospitals.append(hospital)
+        
+        if affordable_hospitals:
+            message = f"Hospitals within your budget for {service_needed}: {', '.join(affordable_hospitals)}"
+        else:
+            message = "No hospitals found within your budget for that service."
+
+    # --- Diet Planner Logic ---
+    elif action == "generate_diet_plan":
+        pet_species = data.get('pet_species')
+        pet_age = data.get('pet_age')
+        health_issues = data.get('health_issues', None)
+
+        plan = current_state["diet_rules"].get(pet_species, {}).get(pet_age, "No specific plan found. Consult a vet.")
+        if health_issues:
+            health_rules = current_state["diet_rules"].get("health_issues", {})
+            for issue, recommendation in health_rules.items():
+                if issue in health_issues.lower():
+                    plan += f" {recommendation}"
+        message = plan
+    
+    # --- Feedback Collector Logic ---
+    elif action == "submit_feedback":
+        feedback_data = {
+            "vet_name": data.get('vet_name'),
+            "rating": data.get('rating'),
+            "comments": data.get('comments'),
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        current_state["feedback_list"].append(feedback_data)
+        message = "Thank you for your feedback!"
+    
+    return jsonify({"message": message, "state": current_state})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+from flask import Flask, request, jsonify
+import datetime
+import json
+
+app = Flask(__name__)
+
+# Initial application state. This is re-initialized for every new request
+# to the serverless function.
+initial_state = {
+    "appointments": {},
+    "vets": ["Dr. Smith", "Dr. Jones"],
+    "hospitals": {
+        "City Animal Hospital": {"checkup": 50, "vaccination": 30, "surgery": 500},
+        "Pet Care Clinic": {"checkup": 65, "vaccination": 40, "surgery": 650},
+        "Affordable Vet Center": {"checkup": 40, "vaccination": 25, "surgery": 450}
+    },
+    "diet_rules": {
+        "dog": {
+            "adult": "Feed a balanced adult dog food. Measure portions.",
+            "puppy": "Use a high-protein puppy formula. Consult your vet."
+        },
+        "cat": {
+            "adult": "Use a high-quality wet food. Ensure fresh water is always available.",
+            "senior": "Consider a low-calorie diet to prevent weight gain."
+        },
+        "health_issues": {
+            "weight": "Also, consider a low-fat diet and increase exercise.",
+            "kidney": "A low-phosphorus diet is recommended. Your vet can provide a therapeutic food."
+        }
+    },
+    "feedback_list": []
+}
+
+@app.route('/api', methods=['POST'])
+def handle_request():
+    """
+    Handles all requests by receiving the current state, an action, and data.
+    It returns the updated state and a response message.
+    """
+    try:
+        # Retrieve the current state and user action from the request body
+        req_data = request.json
+        current_state = req_data.get('state', initial_state.copy())
+        action = req_data.get('action')
+        data = req_data.get('data', {})
+    except json.JSONDecodeError:
+        return jsonify({"message": "Invalid JSON format."}), 400
+
+    message = "I can help with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+    # --- Appointment Scheduler Logic ---
+    if action == "book_appointment":
+        vet_name = data.get('vet_name')
+        pet_name = data.get('pet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+        reason = data.get('reason')
+        
+        if vet_name not in current_state["vets"]:
+            message = "Error: Vet not found."
+        elif (vet_name, date, time_slot) in current_state["appointments"]:
+            message = "Error: Time slot already booked."
+        else:
+            current_state["appointments"][(vet_name, date, time_slot)] = {
+                "pet_name": pet_name,
+                "reason": reason
+            }
+            message = f"Success: Appointment booked for {pet_name} with {vet_name} on {date} at {time_slot}."
+
+    elif action == "cancel_appointment":
+        vet_name = data.get('vet_name')
+        pet_name = data.get('pet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+
+        if (vet_name, date, time_slot) in current_state["appointments"]:
+            del current_state["appointments"][(vet_name, date, time_slot)]
+            message = "Success: Appointment canceled."
+        else:
+            message = "Error: Appointment not found."
+
+    # --- Budget Tracker Logic ---
+    elif action == "find_hospitals_by_budget":
+        budget = data.get('budget')
+        service_needed = data.get('service_needed')
+        affordable_hospitals = []
+        for hospital, prices in current_state["hospitals"].items():
+            if service_needed in prices and prices[service_needed] <= budget:
+                affordable_hospitals.append(hospital)
+        
+        if affordable_hospitals:
+            message = f"Hospitals within your budget for {service_needed}: {', '.join(affordable_hospitals)}"
+        else:
+            message = "No hospitals found within your budget for that service."
+
+    # --- Diet Planner Logic ---
+    elif action == "generate_diet_plan":
+        pet_species = data.get('pet_species')
+        pet_age = data.get('pet_age')
+        health_issues = data.get('health_issues', None)
+
+        plan = current_state["diet_rules"].get(pet_species, {}).get(pet_age, "No specific plan found. Consult a vet.")
+        if health_issues:
+            health_rules = current_state["diet_rules"].get("health_issues", {})
+            for issue, recommendation in health_rules.items():
+                if issue in health_issues.lower():
+                    plan += f" {recommendation}"
+        message = plan
+    
+    # --- Feedback Collector Logic ---
+    elif action == "submit_feedback":
+        feedback_data = {
+            "vet_name": data.get('vet_name'),
+            "rating": data.get('rating'),
+            "comments": data.get('comments'),
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        current_state["feedback_list"].append(feedback_data)
+        message = "Thank you for your feedback!"
+    
+    return jsonify({"message": message, "state": current_state})
+
+
+
+
 
 
 
