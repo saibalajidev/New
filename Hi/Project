@@ -1,0 +1,521 @@
+import datetime
+
+class AppointmentScheduler:
+    def __init__(self):
+        # In a real application, this would be a database connection
+        self.appointments = {} 
+        self.vets = ["Dr. Smith", "Dr. Jones"]
+
+    def book_appointment(self, vet_name, pet_name, appointment_date, time_slot, reason):
+        """Books an appointment for a pet."""
+        if vet_name not in self.vets:
+            return "Error: Vet not found."
+        
+        # Check if the time slot is available
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            return "Error: Time slot already booked."
+
+        # Store the appointment
+        self.appointments[(vet_name, appointment_date, time_slot)] = {
+            "pet_name": pet_name,
+            "reason": reason
+        }
+        return f"Success: Appointment booked for {pet_name} with {vet_name} on {appointment_date} at {time_slot}."
+
+    def cancel_appointment(self, vet_name, pet_name, appointment_date, time_slot):
+        """Cancels a scheduled appointment."""
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            del self.appointments[(vet_name, appointment_date, time_slot)]
+            return "Success: Appointment canceled."
+        else:
+            return "Error: Appointment not found."
+
+    def get_available_slots(self, vet_name, date):
+        """Finds and returns available time slots for a vet on a specific date."""
+        # This is a simplified example; a real system would have more complex logic
+        all_slots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM"]
+        booked_slots = [slot for (v, d, slot) in self.appointments if v == vet_name and d == date]
+        available_slots = [slot for slot in all_slots if slot not in booked_slots]
+        return available_slots. 
+
+
+
+
+
+
+class FeedbackCollector:
+    def __init__(self):
+        # This would be a database in a real application
+        self.feedback_list = []
+
+    def submit_feedback(self, vet_name, rating, comments):
+        """Allows a user to submit feedback for a vet."""
+        feedback = {
+            "vet_name": vet_name,
+            "rating": rating,
+            "comments": comments,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        self.feedback_list.append(feedback)
+        return "Thank you for your feedback!"
+
+    def get_all_feedback(self):
+        """Retrieves all collected feedback."""
+        return self.feedback_list
+
+
+
+
+
+class Chatbot:
+    def __init__(self):
+        self.scheduler = AppointmentScheduler()
+        self.budget_tracker = BudgetTracker()
+        self.diet_planner = DietPlanner()
+        self.feedback_collector = FeedbackCollector()
+
+    def respond_to_query(self, user_query):
+        """Analyzes user input and routes the request to the correct function."""
+        user_query = user_query.lower()
+
+        # Handle appointment booking
+        if "book" in user_query or "appointment" in user_query:
+            return "To book an appointment, please tell me the vet's name, your pet's name, the date, time, and reason for the visit."
+        
+        # Handle budget tracking
+        elif "budget" in user_query or "cost" in user_query:
+            return "What is your budget and what service do you need? (e.g., 'checkup', 'surgery')"
+        
+        # Handle diet planning
+        elif "diet" in user_query or "food" in user_query:
+            return "I can help with that. What is your pet's species and age? Do they have any health issues?"
+        
+        # Handle feedback collection
+        elif "feedback" in user_query or "review" in user_query:
+            return "I'd be happy to. Please tell me the vet's name, your rating (1-5), and any comments you have."
+            
+        else:
+            return "I can help you with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+
+
+
+
+
+class Chatbot:
+    def __init__(self):
+        self.scheduler = AppointmentScheduler()
+        self.budget_tracker = BudgetTracker()
+        self.diet_planner = DietPlanner()
+        self.feedback_collector = FeedbackCollector()
+
+    def respond_to_query(self, user_query):
+        """Analyzes user input and routes the request to the correct function."""
+        user_query = user_query.lower()
+
+        # Handle appointment booking
+        if "book" in user_query or "appointment" in user_query:
+            return "To book an appointment, please tell me the vet's name, your pet's name, the date, time, and reason for the visit."
+        
+        # Handle budget tracking
+        elif "budget" in user_query or "cost" in user_query:
+            return "What is your budget and what service do you need? (e.g., 'checkup', 'surgery')"
+        
+        # Handle diet planning
+        elif "diet" in user_query or "food" in user_query:
+            return "I can help with that. What is your pet's species and age? Do they have any health issues?"
+        
+        # Handle feedback collection
+        elif "feedback" in user_query or "review" in user_query:
+            return "I'd be happy to. Please tell me the vet's name, your rating (1-5), and any comments you have."
+            
+        else:
+            return "I can help you with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+
+
+
+
+
+
+class BudgetTracker:
+    def __init__(self):
+        # A simple dictionary to simulate a database of hospitals and their prices
+        self.hospitals = {
+            "City Animal Hospital": {"checkup": 50, "vaccination": 30, "surgery": 500},
+            "Pet Care Clinic": {"checkup": 65, "vaccination": 40, "surgery": 650},
+            "Affordable Vet Center": {"checkup": 40, "vaccination": 25, "surgery": 450}
+        }
+
+    def find_hospitals_by_budget(self, budget, service_needed):
+        """Finds hospitals that offer a service within a specified budget."""
+        affordable_hospitals = []
+        for hospital, prices in self.hospitals.items():
+            if service_needed in prices and prices[service_needed] <= budget:
+                affordable_hospitals.append(hospital)
+        
+        if affordable_hospitals:
+            return f"Hospitals within your budget for {service_needed}: {', '.join(affordable_hospitals)}"
+        else:
+            return "No hospitals found within your budget for that service."
+
+
+
+
+
+
+
+import json
+import os
+
+class DietPlanner:
+    def __init__(self, data_file='diet_rules.json'):
+        """Initializes the DietPlanner by loading rules from a JSON file."""
+        self.data_file = data_file
+        self.diet_rules = self._load_data()
+
+    def _load_data(self):
+        """Loads dietary rules from a JSON file."""
+        if not os.path.exists(self.data_file):
+            print(f"Warning: Data file '{self.data_file}' not found. Initializing with empty rules.")
+            return {}
+        with open(self.data_file, 'r') as f:
+            return json.load(f)
+
+    def _save_data(self):
+        """Saves current dietary rules to the JSON file."""
+        with open(self.data_file, 'w') as f:
+            json.dump(self.diet_rules, f, indent=4)
+
+    def add_diet_rule(self, species, age, rule):
+        """Adds a new diet rule to the dataset."""
+        if species not in self.diet_rules:
+            self.diet_rules[species] = {}
+        self.diet_rules[species][age] = rule
+        self._save_data()
+        return f"Rule for {age} {species} added successfully."
+        
+    def generate_diet_plan(self, pet_species, pet_age, health_issues=None):
+        """Generates a diet plan based on pet details using the dynamic dataset."""
+        plan = self.diet_rules.get(pet_species, {}).get(pet_age, "No specific plan found. Consult a vet.")
+
+        if health_issues:
+            # Check for specific health issue recommendations
+            health_rules = self.diet_rules.get("health_issues", {})
+            for issue, recommendation in health_rules.items():
+                if issue in health_issues.lower():
+                    plan += f" {recommendation}"
+        
+        return f"Diet Plan for your {pet_age} {pet_species}:\n{plan}"
+
+
+
+import datetime
+import json
+import os
+
+class AppointmentScheduler:
+    def __init__(self):
+        """Manages appointment booking and availability."""
+        # A simple dictionary to simulate a database of appointments
+        self.appointments = {} 
+        self.vets = ["Dr. Smith", "Dr. Jones"]
+
+    def book_appointment(self, vet_name, pet_name, appointment_date, time_slot, reason):
+        """Books an appointment for a pet."""
+        if vet_name not in self.vets:
+            return "Error: Vet not found."
+        
+        # Check if the time slot is available
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            return "Error: Time slot already booked."
+
+        self.appointments[(vet_name, appointment_date, time_slot)] = {
+            "pet_name": pet_name,
+            "reason": reason
+        }
+        return f"Success: Appointment booked for {pet_name} with {vet_name} on {appointment_date} at {time_slot}."
+
+    def cancel_appointment(self, vet_name, pet_name, appointment_date, time_slot):
+        """Cancels a scheduled appointment."""
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            del self.appointments[(vet_name, appointment_date, time_slot)]
+            return "Success: Appointment canceled."
+        else:
+            return "Error: Appointment not found."
+
+    def get_available_slots(self, vet_name, date):
+        """Finds and returns available time slots for a vet on a specific date."""
+        all_slots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM"]
+        booked_slots = [slot for (v, d, slot) in self.appointments if v == vet_name and d == date]
+        available_slots = [slot for slot in all_slots if slot not in booked_slots]
+        return available_slots
+
+---
+
+class BudgetTracker:
+    def __init__(self):
+        """Helps users find vet hospitals within their budget."""
+        self.hospitals = {
+            "City Animal Hospital": {"checkup": 50, "vaccination": 30, "surgery": 500},
+            "Pet Care Clinic": {"checkup": 65, "vaccination": 40, "surgery": 650},
+            "Affordable Vet Center": {"checkup": 40, "vaccination": 25, "surgery": 450}
+        }
+
+    def find_hospitals_by_budget(self, budget, service_needed):
+        """Finds hospitals that offer a service within a specified budget."""
+        affordable_hospitals = []
+        for hospital, prices in self.hospitals.items():
+            if service_needed in prices and prices[service_needed] <= budget:
+                affordable_hospitals.append(hospital)
+        
+        if affordable_hospitals:
+            return f"Hospitals within your budget for {service_needed}: {', '.join(affordable_hospitals)}"
+        else:
+            return "No hospitals found within your budget for that service."
+
+---
+
+class DietPlanner:
+    def __init__(self, data_file='diet_rules.json'):
+        """Initializes the DietPlanner by loading rules from a JSON file."""
+        self.data_file = data_file
+        self.diet_rules = self._load_data()
+
+    def _load_data(self):
+        """Loads dietary rules from a JSON file."""
+        if not os.path.exists(self.data_file):
+            return {}
+        with open(self.data_file, 'r') as f:
+            return json.load(f)
+
+    def _save_data(self):
+        """Saves current dietary rules to the JSON file."""
+        with open(self.data_file, 'w') as f:
+            json.dump(self.diet_rules, f, indent=4)
+
+    def generate_diet_plan(self, pet_species, pet_age, health_issues=None):
+        """Generates a diet plan based on pet details using the dynamic dataset."""
+        plan = self.diet_rules.get(pet_species, {}).get(pet_age, "No specific plan found. Consult a vet.")
+
+        if health_issues:
+            health_rules = self.diet_rules.get("health_issues", {})
+            for issue, recommendation in health_rules.items():
+                if issue in health_issues.lower():
+                    plan += f" {recommendation}"
+        
+        return f"Diet Plan for your {pet_age} {pet_species}:\n{plan}"
+
+---
+
+class FeedbackCollector:
+    def __init__(self):
+        """Collects and stores user feedback for vets and hospitals."""
+        self.feedback_list = []
+
+    def submit_feedback(self, vet_name, rating, comments):
+        """Allows a user to submit feedback for a vet."""
+        feedback = {
+            "vet_name": vet_name,
+            "rating": rating,
+            "comments": comments,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        self.feedback_list.append(feedback)
+        return "Thank you for your feedback!"
+
+    def get_all_feedback(self):
+        """Retrieves all collected feedback."""
+        return self.feedback_list
+
+---
+
+class Chatbot:
+    def __init__(self):
+        """A conversational interface that ties all features together."""
+        self.scheduler = AppointmentScheduler()
+        self.budget_tracker = BudgetTracker()
+        self.diet_planner = DietPlanner()
+        self.feedback_collector = FeedbackCollector()
+
+    def respond_to_query(self, user_query):
+        """Analyzes user input and routes the request to the correct function."""
+        user_query = user_query.lower()
+
+        if "book" in user_query or "appointment" in user_query:
+            return "To book an appointment, please tell me the vet's name, your pet's name, the date, time, and reason for the visit."
+        
+        elif "budget" in user_query or "cost" in user_query:
+            return "What is your budget and what service do you need? (e.g., 'checkup', 'surgery')"
+        
+        elif "diet" in user_query or "food" in user_query:
+            return "I can help with that. What is your pet's species and age? Do they have any health issues?"
+        
+        elif "feedback" in user_query or "review" in user_query:
+            return "I'd be happy to. Please tell me the vet's name, your rating (1-5), and any comments you have."
+            
+        else:
+            return "I can help you with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+if __name__ == '__main__':
+    # This is a sample `diet_rules.json` file. You need to create this file
+    # for the DietPlanner to work correctly.
+    diet_data = {
+        "dog": {
+            "adult": "Feed a balanced adult dog food. Measure portions.",
+            "puppy": "Use a high-protein puppy formula. Consult your vet."
+        },
+        "cat": {
+            "adult": "Use a high-quality wet food. Ensure fresh water is always available.",
+            "senior": "Consider a low-calorie diet to prevent weight gain."
+        },
+        "health_issues": {
+            "weight": "Also, consider a low-fat diet and increase exercise.",
+            "kidney": "A low-phosphorus diet is recommended. Your vet can provide a therapeutic food."
+        }
+    }
+    with open("diet_rules.json", "w") as f:
+        json.dump(diet_data, f, indent=4)
+
+    # Example of using the chatbot
+    bot = Chatbot()
+    print("Welcome to the Pet Health Assistant!")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            print("Goodbye!")
+            break
+        response = bot.respond_to_query(user_input)
+        print(f"Bot: {response}")
+
+
+
+
+
+from flask import Flask, request, jsonify
+import datetime
+import json
+
+app = Flask(__name__)
+
+# Initial application state. This is re-initialized for every new request
+# to the serverless function.
+initial_state = {
+    "appointments": {},
+    "vets": ["Dr. Smith", "Dr. Jones"],
+    "hospitals": {
+        "City Animal Hospital": {"checkup": 50, "vaccination": 30, "surgery": 500},
+        "Pet Care Clinic": {"checkup": 65, "vaccination": 40, "surgery": 650},
+        "Affordable Vet Center": {"checkup": 40, "vaccination": 25, "surgery": 450}
+    },
+    "diet_rules": {
+        "dog": {
+            "adult": "Feed a balanced adult dog food. Measure portions.",
+            "puppy": "Use a high-protein puppy formula. Consult your vet."
+        },
+        "cat": {
+            "adult": "Use a high-quality wet food. Ensure fresh water is always available.",
+            "senior": "Consider a low-calorie diet to prevent weight gain."
+        },
+        "health_issues": {
+            "weight": "Also, consider a low-fat diet and increase exercise.",
+            "kidney": "A low-phosphorus diet is recommended. Your vet can provide a therapeutic food."
+        }
+    },
+    "feedback_list": []
+}
+
+@app.route('/api', methods=['POST'])
+def handle_request():
+    """
+    Handles all requests by receiving the current state, an action, and data.
+    It returns the updated state and a response message.
+    """
+    try:
+        # Retrieve the current state and user action from the request body
+        req_data = request.json
+        current_state = req_data.get('state', initial_state.copy())
+        action = req_data.get('action')
+        data = req_data.get('data', {})
+    except json.JSONDecodeError:
+        return jsonify({"message": "Invalid JSON format."}), 400
+
+    message = "I can help with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+    # --- Appointment Scheduler Logic ---
+    if action == "book_appointment":
+        vet_name = data.get('vet_name')
+        pet_name = data.get('pet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+        reason = data.get('reason')
+        
+        if vet_name not in current_state["vets"]:
+            message = "Error: Vet not found."
+        elif (vet_name, date, time_slot) in current_state["appointments"]:
+            message = "Error: Time slot already booked."
+        else:
+            current_state["appointments"][(vet_name, date, time_slot)] = {
+                "pet_name": pet_name,
+                "reason": reason
+            }
+            message = f"Success: Appointment booked for {pet_name} with {vet_name} on {date} at {time_slot}."
+
+    elif action == "cancel_appointment":
+        vet_name = data.get('vet_name')
+        pet_name = data.get('pet_name')
+        date = data.get('date')
+        time_slot = data.get('time_slot')
+
+        if (vet_name, date, time_slot) in current_state["appointments"]:
+            del current_state["appointments"][(vet_name, date, time_slot)]
+            message = "Success: Appointment canceled."
+        else:
+            message = "Error: Appointment not found."
+
+    # --- Budget Tracker Logic ---
+    elif action == "find_hospitals_by_budget":
+        budget = data.get('budget')
+        service_needed = data.get('service_needed')
+        affordable_hospitals = []
+        for hospital, prices in current_state["hospitals"].items():
+            if service_needed in prices and prices[service_needed] <= budget:
+                affordable_hospitals.append(hospital)
+        
+        if affordable_hospitals:
+            message = f"Hospitals within your budget for {service_needed}: {', '.join(affordable_hospitals)}"
+        else:
+            message = "No hospitals found within your budget for that service."
+
+    # --- Diet Planner Logic ---
+    elif action == "generate_diet_plan":
+        pet_species = data.get('pet_species')
+        pet_age = data.get('pet_age')
+        health_issues = data.get('health_issues', None)
+
+        plan = current_state["diet_rules"].get(pet_species, {}).get(pet_age, "No specific plan found. Consult a vet.")
+        if health_issues:
+            health_rules = current_state["diet_rules"].get("health_issues", {})
+            for issue, recommendation in health_rules.items():
+                if issue in health_issues.lower():
+                    plan += f" {recommendation}"
+        message = plan
+    
+    # --- Feedback Collector Logic ---
+    elif action == "submit_feedback":
+        feedback_data = {
+            "vet_name": data.get('vet_name'),
+            "rating": data.get('rating'),
+            "comments": data.get('comments'),
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        current_state["feedback_list"].append(feedback_data)
+        message = "Thank you for your feedback!"
+    
+    return jsonify({"message": message, "state": current_state})
+
+
+
+
+
+
