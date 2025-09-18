@@ -133,6 +133,25 @@ class Chatbot:
             return "I can help you with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
 
 
+class Chatbot:
+    def __init__(self):
+        self.scheduler = AppointmentScheduler()
+        # Other initializations...
+
+    def respond_to_query(self, user_query):
+        user_query = user_query.lower()
+
+        # Handle appointment booking for any service
+        if "book" in user_query or "appointment" in user_query or "grooming" in user_query or "vaccination" in user_query:
+            return "To book an appointment, please tell me the service type (vet visit, grooming, vaccination), vet's name, your pet's name, the date, time, and reason for the visit."
+        
+        # Other conditions remain the same...
+        # ...
+        
+        else:
+            return "I can help you with appointments, budgeting, diet plans, or collecting feedback. How can I assist you today?"
+
+
 
 
 
@@ -513,6 +532,58 @@ def handle_request():
         message = "Thank you for your feedback!"
     
     return jsonify({"message": message, "state": current_state})
+
+
+
+
+
+import datetime
+
+class AppointmentScheduler:
+    def __init__(self):
+        """Manages appointment booking for various services."""
+        self.appointments = {} 
+        self.vets = ["Dr. Smith", "Dr. Jones"]
+        self.services = ["vet visit", "grooming", "vaccination"]
+
+    def book_appointment(self, service_type, vet_name, pet_name, appointment_date, time_slot, reason):
+        """Books an appointment for a pet, including vet visits, grooming, and vaccinations."""
+        if service_type.lower() not in self.services:
+            return "Error: Service type not found. Available services are: vet visit, grooming, vaccination."
+            
+        if vet_name not in self.vets:
+            return "Error: Vet not found."
+        
+        # Check if the time slot is available for the given vet and date
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            return "Error: Time slot already booked."
+
+        # Store the appointment with the service type
+        self.appointments[(vet_name, appointment_date, time_slot)] = {
+            "service_type": service_type,
+            "pet_name": pet_name,
+            "reason": reason
+        }
+        return f"Success: {service_type} appointment booked for {pet_name} with {vet_name} on {appointment_date} at {time_slot}."
+
+    def cancel_appointment(self, vet_name, appointment_date, time_slot):
+        """Cancels a scheduled appointment."""
+        if (vet_name, appointment_date, time_slot) in self.appointments:
+            del self.appointments[(vet_name, appointment_date, time_slot)]
+            return "Success: Appointment canceled."
+        else:
+            return "Error: Appointment not found."
+
+    def get_available_slots(self, vet_name, date):
+        """Finds and returns available time slots for a vet on a specific date."""
+        all_slots = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM"]
+        # Find booked slots for a specific vet on a specific date
+        booked_slots = [
+            slot for (v, d, slot) in self.appointments 
+            if v == vet_name and d == date
+        ]
+        available_slots = [slot for slot in all_slots if slot not in booked_slots]
+        return available_slots
 
 
 
